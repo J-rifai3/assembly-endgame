@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { clsx } from "clsx"
 import { languages } from "./languages"
 import { getFarewellText, getRandomWord } from "./utils"
@@ -33,16 +33,36 @@ export default function AssemblyEndgame() {
     const isGameOver = isGameWon || isGameLost
     const lastGuessedLetter = guessedLetters[guessedLetters.length - 1]
     const isLastGuessIncorrect = lastGuessedLetter && !currentWord.includes(lastGuessedLetter)
-
+    const loseSoundRef = useRef(null);
+    const winSoundRef = useRef(null);
+    
     // Static values
     const alphabet = "abcdefghijklmnopqrstuvwxyz"
+    
+    
+    useEffect(() => {
+        if (isGameWon && winSoundRef.current) {
+            winSoundRef.current.currentTime = 0
+            winSoundRef.current.play()
+        }
+    }, [isGameWon])
+
+    useEffect(() => {
+        if (isGameLost && loseSoundRef.current) {
+            loseSoundRef.current.currentTime = 0
+            loseSoundRef.current.play()
+        }
+    }, [isGameLost])
+
 
     function addGuessedLetter(letter) {
-        setGuessedLetters(prevLetters =>
-            prevLetters.includes(letter) ?
-                prevLetters :
-                [...prevLetters, letter]
-        )
+        setGuessedLetters(prevLetters => {
+            if (prevLetters.includes(letter)) return prevLetters
+
+            const nextLetters = [...prevLetters, letter]
+
+            return nextLetters
+        })
     }
 
     function startNewGame() {
@@ -140,6 +160,17 @@ export default function AssemblyEndgame() {
 
     return (
         <main>
+            <audio 
+                ref={winSoundRef} 
+                src={'https://www.myinstants.com/media/sounds/crowd_small_chil_ec049202_9klCwI6.mp3'} 
+                preload="auto" 
+            />
+            <audio
+                ref={loseSoundRef}
+                src="https://www.myinstants.com/media/sounds/priceisrightfail_1_1.mp3"
+                preload="auto"
+            />
+
             {
                 isGameWon && 
                     <Confetti
